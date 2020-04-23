@@ -98,6 +98,7 @@ L.Control.Layers = L.Control.extend({
 	    this._map.setMaxZoom(args["maxZoom"]);
 	}
 
+	this.select.selectedIndex = idx + 1;
 	this._updatePermalink();
 
 	// user defined stuff
@@ -186,9 +187,7 @@ L.Control.Layers = L.Control.extend({
 		var layer = _this._getLayerWithLabel(label);
 
 		if (layer){
-
-		    var idx = _this.setLayer(layer);
-		    _this.select.selectedIndex = idx + 1;
+		    _this.setLayer(layer);
 		}
 	    }
 	    
