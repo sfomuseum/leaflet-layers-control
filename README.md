@@ -1,10 +1,12 @@
 # leaflet-layers-control
 
-Leaflet.js control displaying one or more custom layers on a map.
+![](docs/images/leaflet-layers-control.png)
+
+Leaflet.js control for displaying one or more custom layers on a map.
 
 ## Important
 
-Work in progress. Documentation to follow.
+Work in progress. Documentation is incomplete.
 
 ## Example
 
