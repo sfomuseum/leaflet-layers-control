@@ -1,3 +1,5 @@
+// version v0.0.1
+
 L.Control.Layers = L.Control.extend({
     _map: null,
     _hash: null,
