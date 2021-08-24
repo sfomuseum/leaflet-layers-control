@@ -1,4 +1,4 @@
-// version v0.0.1
+// v0.0.2
 
 L.Control.Layers = L.Control.extend({
     _map: null,
@@ -6,12 +6,16 @@ L.Control.Layers = L.Control.extend({
     _tile_layer: null,	// a leaflet.js tilelayer
     _layer: null,	// layer details (a row in options.catalog)
     _current: -1,
-    _max_zoom: 18,
+    _max_zoom: 20,
     _min_zoom: 1,
     options: {
 	position: 'bottomright',
 	catalog: [],
+	selected: null,
+	on_add: null,
+	on_remove: null,
 	on_change: null,
+	layer_args: {},
     },
     onAdd: function(map) {
 
@@ -27,7 +31,9 @@ L.Control.Layers = L.Control.extend({
 	var opt = L.DomUtil.create('option', '', this.select);
 	opt.setAttribute("value", -1);
 	opt.innerText = "";
-	
+
+	var selected_layer;
+
 	for (var idx in this.options.catalog){
 
 	    var layer = this.options.catalog[idx];
@@ -35,6 +41,11 @@ L.Control.Layers = L.Control.extend({
 	    
 	    var opt = L.DomUtil.create('option', '', this.select);
 	    opt.setAttribute("value", idx);
+
+	    if ((this.options.selected) && (this.options.selected == label)){
+		opt.setAttribute("selected", "selected");
+	    }
+
 	    opt.innerText = label;
 	}
 
@@ -57,22 +68,50 @@ L.Control.Layers = L.Control.extend({
 		_this.setLayer(layer);
 	    }
 	});
+	
+        L.DomEvent.on(this.div, 'change', this._change, this);
 
-        L.DomEvent.on(this.select, 'change', this._change, this);
+	L.DomEvent.disableClickPropagation(this.select);
 	return this.div;
+    },
+
+    'setLayerWithLabel': function(label){
+
+	for (var idx in this.options.catalog){
+
+	    var layer = this.options.catalog[idx];
+
+	    if (layer["label"] != label){
+		continue;
+	    }
+
+	    this.setLayer(layer);
+	    break;
+	}
     },
 
     'setLayer': function(layer){
 
 	if (this._tile_layer != null){
-	    this._map.removeLayer(this._tile_layer);
+
+	    if (this.options.on_remove){
+		this.options.on_remove(this._tile_layer);
+	    } else {
+		this._map.removeLayer(this._tile_layer);
+	    }
+
 	    this._tile_layer = null;
 
 	    this._map.setMaxZoom(this._max_zoom);
 	}
 
+	if (! layer){
+	    return;
+	}
+
 	var url = layer["url"];
-	var args = {};	 // min,max zoom...
+
+	var args = this.options.layer_args;
 
 	if (layer["min_zoom"]){
 	    args["minZoom"] = parseInt(layer["min_zoom"]);
@@ -83,8 +122,13 @@ L.Control.Layers = L.Control.extend({
 	}
 	
 	var tile_layer = L.tileLayer(url, args);
-	tile_layer.addTo(this._map);
 
+	if (this.options.on_add){
+	    this.options.on_add(tile_layer);
+	} else {
+	    tile_layer.addTo(this._map);
+	}
+	
 	var idx = this._getIndexWithLayer(layer);
 
 	this._current = idx;
@@ -96,7 +140,6 @@ L.Control.Layers = L.Control.extend({
 	}
 
 	if (args["maxZoom"] <= this._max_zoom){
-
 	    this._map.setMaxZoom(args["maxZoom"]);
 	}
 
@@ -142,12 +185,6 @@ L.Control.Layers = L.Control.extend({
 		center.lng.toFixed(precision),
 	    ];
 
-	    var current = _this._getCurrentLayer();
-
-	    if (current){
-		parts.unshift(current['label']);
-	    }
-
 	    if (on_format){
 		
 		var extras = on_format();
@@ -162,6 +199,12 @@ L.Control.Layers = L.Control.extend({
 			parts.unshift(extras[i]);
 		    }
 		}
+	    }
+
+	    var current = _this._getCurrentLayer();
+
+	    if (current){
+		parts.unshift(current['label']);
 	    }
 	    
 	    return "#" + parts.join("/");
