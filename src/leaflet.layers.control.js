@@ -1,5 +1,4 @@
 // v0.0.2
-
 L.Control.Layers = L.Control.extend({
     _map: null,
     _hash: null,
@@ -144,7 +143,7 @@ L.Control.Layers = L.Control.extend({
 	}
 
 	this.select.selectedIndex = idx + 1;
-	this._updatePermalink();
+	this.updateHash();
 
 	// user defined stuff
 	
@@ -154,7 +153,7 @@ L.Control.Layers = L.Control.extend({
 	
 	return idx;
     },
-
+    
     'addHash': function(on_parse, on_format){
 	
 	// see also:
@@ -255,6 +254,15 @@ L.Control.Layers = L.Control.extend({
 	return hash;
     },
 
+    'updateHash': function(){
+	
+	if (!this._hash){
+	    return;
+	}
+
+	this._hash.onMapMove();
+    },
+
     'parseHashString': function(hash_str){
 	
 	if (hash_str.indexOf('#') === 0) {
@@ -268,6 +276,7 @@ L.Control.Layers = L.Control.extend({
 
 	var lat = center[1];
 	var lon = center[0];
+	var context;
 	var label;
 
 	var update_position = false;
@@ -275,6 +284,14 @@ L.Control.Layers = L.Control.extend({
 	var args = hash_str.split("/");
 		
 	switch (args.length){
+	case 5:
+	    label = args[0];
+	    context = args[1];
+	    zoom = args[2];
+	    lat = args[3];
+	    lon = args[4];			
+	    update_position = true;
+	    break;
 	case 4:
 	    label = args[0];
 	    zoom = args[1];
@@ -297,6 +314,7 @@ L.Control.Layers = L.Control.extend({
 	    label = args[0];
 	    break;
 	default:
+	    console.log("NO", args);
 	    // console.log("Unrecognized hash string", hash_str);
 	    return null;
 	}
@@ -339,6 +357,7 @@ L.Control.Layers = L.Control.extend({
 	    'zoom': zoom,
 	    'label': label,
 	    'update_position': update_position,
+	    'context': context,
 	};
 	
 	return h;
@@ -445,15 +464,6 @@ L.Control.Layers = L.Control.extend({
 	this._current = prev;
 	
 	return this._getLayerWithIndex(prev);		
-    },
-
-    '_updatePermalink': function(){
-
-	if (! this._hash){
-	    return;
-	}
-
-	this._hash.onMapMove();
     },
 
 });
